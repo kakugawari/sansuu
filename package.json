@@ -1,0 +1,14 @@
+{
+  "name": "sansuu",
+  "version": "1.0.0",
+  "description": "小学生・中学生の さんすうドリル (面積・濃度・割合・速さ…)。ビルドなしで動く",
+  "private": true,
+  "scripts": {
+    "start": "node serve.js",
+    "test": "node --test *.test.js",
+    "test:ui": "node browser-test.js",
+    "icon": "node make-icon.js",
+    "artifact": "node build-artifact.js"
+  },
+  "license": "MIT"
+}

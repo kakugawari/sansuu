@@ -1,0 +1,388 @@
+/* 見た目。色は :root にまとめ、明るい画面と暗い画面の 両方を 用意する。 */
+
+:root {
+  --bg: #10142a;
+  --bg-2: #171d3a;
+  --bg-3: #1f2750;
+  --line: #2e3868;
+  --text: #eef1ff;
+  --muted: #9aa3cf;
+  --accent: #ffd166;
+  --accent-ink: #2a2200;
+  --ok: #4ade80;
+  --ok-ink: #06301a;
+  --ng: #ff8fa3;
+  --ng-ink: #43000f;
+  --ink-figure: #9fd8ff;
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #f3f5fb;
+    --bg-2: #ffffff;
+    --bg-3: #e9edfa;
+    --line: #d3daf0;
+    --text: #1b1f36;
+    --muted: #5d6588;
+    --accent: #ffb703;
+    --accent-ink: #2a1f00;
+    --ok: #1a9e56;
+    --ok-ink: #ffffff;
+    --ng: #d5334f;
+    --ng-ink: #ffffff;
+    --ink-figure: #2563a8;
+    color-scheme: light;
+  }
+}
+
+* { box-sizing: border-box; }
+
+/*
+ * hidden で 消したものは、かならず 消す。
+ * .screen { display: flex } のような 指定は、ブラウザが 用意している
+ * [hidden] { display: none } より 強い。これを 書かないと 「消したはずの
+ * ホーム画面が 問題の 上に 出たままに なる」。
+ */
+[hidden] { display: none !important; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Noto Sans JP", "Yu Gothic UI",
+               system-ui, -apple-system, "Segoe UI", sans-serif;
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+/* ------------------------------------------------------------ 上のバー */
+
+#topbar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--bg-2);
+  border-bottom: 1px solid var(--line);
+}
+
+.title { margin: 0; font-size: 17px; font-weight: 800; letter-spacing: .04em; }
+.topbar-actions { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+.progress { font-size: 14px; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--muted); }
+
+/* ------------------------------------------------------------ ボタン */
+
+.btn {
+  font: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 11px 16px;
+  min-height: 44px;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: transform .08s ease, border-color .15s ease, background .15s ease;
+}
+
+.btn:hover { border-color: var(--muted); }
+.btn:active { transform: translateY(1px); }
+.btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+.btn-primary { background: var(--accent); border-color: transparent; color: var(--accent-ink); }
+.btn-mini { font-size: 12px; padding: 5px 10px; min-height: 30px; border-radius: 9px; }
+.btn-big { width: 100%; max-width: 420px; font-size: 19px; padding: 12px; min-height: 50px; }
+
+/* ------------------------------------------------------------ 画面 */
+
+/*
+ * 画面の 割りふり。
+ * ホームと けっかは 全体が スクロールする。問題の画面だけは
+ * 「上だけ スクロール、テンキーは 下に すわったまま」に する。
+ * こうしないと、問題文が 長い ときに 「こたえる」が 画面の 外へ 出てしまう。
+ */
+#stage {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.screen {
+  max-width: 560px;
+  height: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 11px;
+}
+
+#homeScreen, #resultScreen {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 14px 12px 24px;
+}
+
+#quizScreen { gap: 0; }
+
+.quiz-top {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 12px 10px;
+}
+
+.quiz-bottom {
+  flex: none;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px 12px;
+  background: var(--bg-2);
+  border-top: 1px solid var(--line);
+}
+
+.lead { margin: 0; font-size: 16px; font-weight: 700; text-align: center; }
+
+.panel {
+  width: 100%;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 14px;
+}
+
+.panel-title {
+  margin: 0 0 10px;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--muted);
+  letter-spacing: .08em;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.panel-title .btn-mini { margin-left: auto; }
+
+/* ------------------------------------------------------------ えらぶ */
+
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chips-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+
+.chip {
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  background: var(--bg-3);
+  border: 2px solid transparent;
+  border-radius: 13px;
+  padding: 10px 13px;
+  min-height: 46px;
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+}
+.chip:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.chip[aria-pressed="true"] { border-color: var(--accent); background: var(--bg-2); }
+.chip .chip-sub { font-size: 11px; font-weight: 600; color: var(--muted); }
+.chip[aria-pressed="true"] .chip-sub { color: var(--accent); }
+
+/* ------------------------------------------------------------ きろく */
+
+.stats { display: flex; flex-direction: column; gap: 8px; }
+.stat-row { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+.stat-name { flex: none; width: 5.2em; font-weight: 700; }
+.stat-bar { flex: 1 1 auto; height: 10px; border-radius: 999px; background: var(--bg-3); overflow: hidden; }
+.stat-fill { height: 100%; background: var(--accent); border-radius: 999px; }
+.stat-num { flex: none; font-variant-numeric: tabular-nums; color: var(--muted); }
+
+/* ------------------------------------------------------------ 出題 */
+
+.bar { width: 100%; height: 8px; border-radius: 999px; background: var(--bg-3); overflow: hidden; }
+.bar-fill { height: 100%; width: 0; background: var(--accent); border-radius: 999px; transition: width .2s ease; }
+
+.qhead { width: 100%; display: flex; gap: 8px; }
+.tag {
+  font-size: 12px; font-weight: 800; letter-spacing: .06em;
+  background: var(--bg-3); color: var(--text);
+  border-radius: 999px; padding: 5px 12px;
+}
+.tag-quiet { background: transparent; color: var(--muted); border: 1px solid var(--line); }
+
+.question {
+  margin: 0;
+  width: 100%;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.75;
+  text-align: left;
+}
+
+.figure { width: 100%; display: flex; justify-content: center; }
+.figure svg { max-width: 100%; height: auto; max-height: 170px; }
+
+/* 分数は 縦に 積んで 書く */
+.frac {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  vertical-align: middle;
+  margin: 0 .18em;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+}
+.frac .fn { border-bottom: 2px solid currentColor; padding: 0 .25em; }
+.frac .fd { padding: 0 .25em; }
+.mixed-whole { font-variant-numeric: tabular-nums; }
+
+/* ------------------------------------------------------------ こたえ欄 */
+
+.answer-row { width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; }
+
+.answer-box {
+  flex: 1 1 auto;
+  max-width: 320px;
+  min-height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+  padding: 8px 16px;
+  background: var(--bg-2);
+  border: 2px solid var(--line);
+  border-radius: 14px;
+  font-size: 27px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+/* 答え合わせの あとは 入力できないので、カーソルも 消す */
+.answer-box.is-ok .caret, .answer-box.is-ng .caret { display: none; }
+.answer-box.is-ok { border-color: var(--ok); }
+.answer-box.is-ng { border-color: var(--ng); }
+
+.caret { width: 3px; height: 25px; background: var(--accent); border-radius: 2px; animation: blink 1.1s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+
+.unit { flex: none; font-size: 18px; font-weight: 800; color: var(--muted); min-width: 2.6em; }
+
+/* ------------------------------------------------------------ まる・ばつ */
+
+.judge {
+  width: 100%;
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 14px;
+  font-size: 17px;
+  font-weight: 800;
+  text-align: center;
+}
+.judge.is-ok { background: var(--ok); color: var(--ok-ink); }
+.judge.is-ng { background: var(--ng); color: var(--ng-ink); }
+.judge.is-hint { background: var(--bg-3); color: var(--text); }
+
+.solution {
+  width: 100%;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 14px;
+  font-size: 15px;
+  line-height: 1.95;
+}
+.solution h3 { margin: 0 0 6px; font-size: 12px; letter-spacing: .08em; color: var(--muted); }
+.solution ol { margin: 0; padding-left: 1.3em; }
+.solution li { margin: 2px 0; }
+
+/* ------------------------------------------------------------ テンキー */
+
+.keypad {
+  width: 100%;
+  max-width: 420px;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 7px;
+}
+
+.key {
+  font: inherit;
+  font-size: 21px;
+  font-weight: 800;
+  color: var(--text);
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  min-height: 50px;
+  cursor: pointer;
+  touch-action: manipulation;
+  font-variant-numeric: tabular-nums;
+  transition: transform .06s ease, background .12s ease;
+}
+.key:active { transform: translateY(1px); background: var(--bg-3); }
+.key:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.key-fn { font-size: 17px; background: var(--bg-3); }
+
+.actions { width: 100%; display: flex; justify-content: center; }
+.actions-wrap { flex-wrap: wrap; gap: 10px; }
+
+/* ------------------------------------------------------------ けっか */
+
+.face { margin: 0; font-size: 54px; line-height: 1; }
+.result { margin: 0; font-size: 40px; font-weight: 800; color: var(--accent); font-variant-numeric: tabular-nums; }
+
+.wrong-list { width: 100%; display: flex; flex-direction: column; gap: 10px; }
+.wrong-item {
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--ng);
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 15px;
+  line-height: 1.8;
+}
+.wrong-item .wrong-answer { color: var(--muted); font-size: 14px; }
+.wrong-item .wrong-answer b { color: var(--text); font-size: 16px; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition-duration: .01ms !important; animation: none !important; }
+}
+
+/* 図。線は 図の色、文字は ふつうの 文字色。 */
+.figure svg { color: var(--ink-figure); }
+.figure text { fill: var(--text); font-size: 13px; font-weight: 700; font-family: inherit; }
+.figure .shape { fill: currentColor; fill-opacity: .13; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; }
+.figure .aux { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-dasharray: 5 4; }
+.figure .edge { fill: none; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; }
+
+.answer-hint { margin: -4px 0 0; font-size: 13px; color: var(--muted); text-align: center; }

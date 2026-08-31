@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>さんすうドリル</title>
+<meta name="description" content="面積・食塩水の濃度・割合・速さ… 小学生と中学生の 算数ドリル">
+<meta name="theme-color" content="#151a2e">
+<link rel="icon" href="./icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="./icon-180.png">
+<link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+
+<div id="app">
+  <header id="topbar">
+    <h1 class="title">さんすうドリル</h1>
+    <div class="topbar-actions">
+      <span id="progress" class="progress" hidden></span>
+      <button type="button" id="btnQuit" class="btn btn-mini" hidden>やめる</button>
+    </div>
+  </header>
+
+  <main id="stage">
+
+    <!-- ============================ ホーム ============================ -->
+    <section id="homeScreen" class="screen">
+      <p class="lead">といてみたい ものを えらんでね。</p>
+
+      <section class="panel">
+        <h2 class="panel-title">レベル</h2>
+        <div id="levelPicker" class="chips"></div>
+      </section>
+
+      <section class="panel">
+        <h2 class="panel-title">
+          ジャンル
+          <button type="button" id="btnAllTopics" class="btn btn-mini">ぜんぶ</button>
+        </h2>
+        <div id="topicPicker" class="chips chips-grid"></div>
+      </section>
+
+      <section class="panel">
+        <h2 class="panel-title">もんだいの かず</h2>
+        <div id="countPicker" class="chips"></div>
+      </section>
+
+      <button type="button" id="btnStart" class="btn btn-primary btn-big">スタート</button>
+
+      <section class="panel" id="statsPanel" hidden>
+        <h2 class="panel-title">
+          これまでの きろく
+          <button type="button" id="btnClearStats" class="btn btn-mini">けす</button>
+        </h2>
+        <div id="statsList" class="stats"></div>
+      </section>
+    </section>
+
+    <!-- ============================ 出題 ============================ -->
+    <section id="quizScreen" class="screen" hidden>
+      <!-- 上: 問題と とき方。ここだけ スクロールする -->
+      <div id="quizTop" class="quiz-top">
+        <div class="bar"><div id="barFill" class="bar-fill"></div></div>
+
+        <div class="qhead">
+          <span id="qTopic" class="tag"></span>
+          <span id="qLevel" class="tag tag-quiet"></span>
+        </div>
+
+        <p id="question" class="question"></p>
+        <div id="figure" class="figure"></div>
+        <div id="solution" class="solution" hidden></div>
+      </div>
+
+      <!-- 下: こたえ欄と テンキー。いつも 同じ場所に あって、動かない -->
+      <div class="quiz-bottom">
+        <div class="answer-row">
+          <div id="answerBox" class="answer-box" role="textbox" aria-label="こたえ" aria-readonly="true">
+            <span id="answerText"></span><span class="caret" aria-hidden="true"></span>
+          </div>
+          <span id="answerUnit" class="unit"></span>
+        </div>
+        <p id="answerHint" class="answer-hint" hidden></p>
+        <p id="judge" class="judge" role="status" aria-live="polite" hidden></p>
+
+        <div id="keypad" class="keypad"></div>
+
+        <div class="actions">
+          <button type="button" id="btnSubmit" class="btn btn-primary btn-big">こたえる</button>
+          <button type="button" id="btnNext" class="btn btn-primary btn-big" hidden>つぎへ</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================ けっか ============================ -->
+    <section id="resultScreen" class="screen" hidden>
+      <p id="scoreFace" class="face"></p>
+      <p id="scoreBig" class="result"></p>
+      <p id="scoreLine" class="lead"></p>
+      <div id="wrongList" class="wrong-list"></div>
+      <div class="actions actions-wrap">
+        <button type="button" id="btnRetryWrong" class="btn" hidden>まちがえた もんだいだけ</button>
+        <button type="button" id="btnAgain" class="btn btn-primary">もう いちど</button>
+        <button type="button" id="btnHome" class="btn">ホームへ</button>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script src="./core.js"></script>
+<script src="./app.js"></script>
+</body>
+</html>
