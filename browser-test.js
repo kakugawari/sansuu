@@ -317,6 +317,19 @@ async function run() {
       await themed.close();
     }
 
+    // 見る人が 明るい/暗いを 自分で えらんだ とき (Artifact の 画面など)
+    const themed = await browser.newContext({ ...devices['iPhone 13'], colorScheme: 'dark' });
+    const themedPage = await themed.newPage();
+    await themedPage.goto(URL);
+    await themedPage.waitForFunction(() => window.__app);
+    const darkBg = await themedPage.evaluate(() => getComputedStyle(document.body).backgroundColor);
+    const pickedLight = await themedPage.evaluate(() => {
+      document.documentElement.dataset.theme = 'light';
+      return getComputedStyle(document.body).backgroundColor;
+    });
+    ok(darkBg !== pickedLight, `data-theme="light" を えらぶと 明るく なる (${darkBg} → ${pickedLight})`);
+    await themed.close();
+
     // ------------------------------------------------ アイコン
     section('アイコン');
     const desk = await browser.newPage();

@@ -17,8 +17,14 @@
   color-scheme: dark;
 }
 
+/*
+ * 明るい画面の 色。
+ * ふだんは 端末の 設定 (prefers-color-scheme) に したがうが、
+ * 見る人が 明るい/暗いを 自分で えらんでいる 場合は
+ * root の data-theme が 立つので、そちらを 優先する。
+ */
 @media (prefers-color-scheme: light) {
-  :root {
+  :root:not([data-theme="dark"]) {
     --bg: #f3f5fb;
     --bg-2: #ffffff;
     --bg-3: #e9edfa;
@@ -34,6 +40,23 @@
     --ink-figure: #2563a8;
     color-scheme: light;
   }
+}
+
+:root[data-theme="light"] {
+    --bg: #f3f5fb;
+    --bg-2: #ffffff;
+    --bg-3: #e9edfa;
+    --line: #d3daf0;
+    --text: #1b1f36;
+    --muted: #5d6588;
+    --accent: #ffb703;
+    --accent-ink: #2a1f00;
+    --ok: #1a9e56;
+    --ok-ink: #ffffff;
+    --ng: #d5334f;
+    --ng-ink: #ffffff;
+    --ink-figure: #2563a8;
+    color-scheme: light;
 }
 
 * { box-sizing: border-box; }
