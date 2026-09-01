@@ -315,6 +315,8 @@ async function run() {
 
     await phone.locator('#scratchCanvas').scrollIntoViewIfNeeded();
     const box = await phone.locator('#scratchCanvas').boundingBox();
+    // 図のない・短い 問題では、あまった 空きを 使って 大きく なる
+    ok(box.height >= 190, `かく らんが 十分 大きい (${Math.round(box.height)}px)`);
     await phone.mouse.move(box.x + 10, box.y + 10);
     await phone.mouse.down();
     await phone.mouse.move(box.x + box.width - 10, box.y + box.height - 10, { steps: 8 });
