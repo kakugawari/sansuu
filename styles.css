@@ -1,62 +1,47 @@
-/* 見た目。色は :root にまとめ、明るい画面と暗い画面の 両方を 用意する。 */
+/*
+ * 見た目。ライトテーマのみ (くらい 画面は 作らない)。
+ * ねらいは 「デスクに 広げた ノートと 文房具」。
+ * 色は :root に トークンで まとめる。紙は クリーム色、文字は 万年筆の インク色、
+ * 強調は 蛍光ペンの オレンジ、ジャンルの チップは 付箋・シールの 色 (4 色)。
+ */
 
 :root {
-  --bg: #10142a;
-  --bg-2: #171d3a;
-  --bg-3: #1f2750;
-  --line: #2e3868;
-  --text: #eef1ff;
-  --muted: #9aa3cf;
-  --accent: #ffd166;
-  --accent-ink: #2a2200;
-  --ok: #4ade80;
-  --ok-ink: #06301a;
-  --ng: #ff8fa3;
-  --ng-ink: #43000f;
-  --ink-figure: #9fd8ff;
-  color-scheme: dark;
-}
+  --paper: #faf3e4;          /* デスクに 広げた 紙 (ページの 地の色) */
+  --paper-card: #fffcf3;     /* 置いた 紙・ふせん (カード、ヘッダー) */
+  --paper-sunk: #f1e6cd;     /* へこんだ 面 (バーの 溝) */
+  --ink: #3a2e1e;            /* 万年筆の インク (文字) */
+  --ink-soft: #8c7a5c;       /* えんぴつ (補助の 文字) */
+  --rule: #e6d6b3;           /* 紙の 罫線・わく線 */
+  --rule-strong: #c9a86b;    /* 少し 濃い わく線・ボタンの ふち */
 
-/*
- * 明るい画面の 色。
- * ふだんは 端末の 設定 (prefers-color-scheme) に したがうが、
- * 見る人が 明るい/暗いを 自分で えらんでいる 場合は
- * root の data-theme が 立つので、そちらを 優先する。
- */
-@media (prefers-color-scheme: light) {
-  :root:not([data-theme="dark"]) {
-    --bg: #f3f5fb;
-    --bg-2: #ffffff;
-    --bg-3: #e9edfa;
-    --line: #d3daf0;
-    --text: #1b1f36;
-    --muted: #5d6588;
-    --accent: #ffb703;
-    --accent-ink: #2a1f00;
-    --ok: #1a9e56;
-    --ok-ink: #ffffff;
-    --ng: #d5334f;
-    --ng-ink: #ffffff;
-    --ink-figure: #2563a8;
-    color-scheme: light;
-  }
-}
+  --accent: #f5a623;         /* 蛍光ペン オレンジ (メインの 色) */
+  --accent-soft: #fbe4bd;
+  --accent-ink: #3a2200;
+  --ok: #3fa772;             /* 緑の マーカー */
+  --ok-ink: #ffffff;
+  --ng: #e2574b;             /* 赤ペン */
+  --ng-ink: #ffffff;
+  --ink-figure: #3b6ea8;     /* 青ボールペン (図の 線) */
 
-:root[data-theme="light"] {
-    --bg: #f3f5fb;
-    --bg-2: #ffffff;
-    --bg-3: #e9edfa;
-    --line: #d3daf0;
-    --text: #1b1f36;
-    --muted: #5d6588;
-    --accent: #ffb703;
-    --accent-ink: #2a1f00;
-    --ok: #1a9e56;
-    --ok-ink: #ffffff;
-    --ng: #d5334f;
-    --ng-ink: #ffffff;
-    --ink-figure: #2563a8;
-    color-scheme: light;
+  /* シールの 4 色 (ジャンルの チップに 使う) */
+  --sticker-mint: #7fc8a9;
+  --sticker-mint-soft: #dcf1e6;
+  --sticker-sky: #7aa9d6;
+  --sticker-sky-soft: #dce9f7;
+  --sticker-pink: #e894b3;
+  --sticker-pink-soft: #fae1eb;
+  --sticker-lilac: #a98fce;
+  --sticker-lilac-soft: #e9e0f5;
+  --ng-soft: #fbe2df;
+
+  --rule-blue: #bcd8ea;      /* ノートの 横罫 */
+  --rule-margin: #e6a9a0;    /* ノートの 赤い 余白線 */
+  --shadow: rgba(120, 92, 42, .18);
+
+  /* 見出しや ボタンは 丸ゴシック (手書き風)、本文は ふつうの ゴシック (読みやすさ 優先) */
+  --font-hand: "Hiragino Maru Gothic ProN", "BIZ UDPGothic", "Yu Gothic UI", "Noto Sans JP", sans-serif;
+
+  color-scheme: light;
 }
 
 * { box-sizing: border-box; }
@@ -77,8 +62,11 @@ html, body {
 }
 
 body {
-  background: var(--bg);
-  color: var(--text);
+  background-color: var(--paper);
+  /* うっすら ドットの グリッド。方眼ノートの 地の 手ざわりを 出す */
+  background-image: radial-gradient(rgba(120, 92, 42, .16) 1px, transparent 1.6px);
+  background-size: 22px 22px;
+  color: var(--ink);
   font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Noto Sans JP", "Yu Gothic UI",
                system-ui, -apple-system, "Segoe UI", sans-serif;
   -webkit-text-size-adjust: 100%;
@@ -100,38 +88,70 @@ body {
   align-items: center;
   gap: 10px;
   padding: 10px 14px;
-  background: var(--bg-2);
-  border-bottom: 1px solid var(--line);
+  background: var(--paper-card);
+  border-bottom: 2px dashed var(--rule-strong);   /* 紙を ちぎった ミシン目の 見立て */
 }
 
-.title { margin: 0; font-size: 17px; font-weight: 800; letter-spacing: .04em; }
+.title {
+  position: relative;
+  z-index: 0;
+  margin: 0;
+  font-family: var(--font-hand);
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: .04em;
+  color: var(--ink);
+}
+/* マスキングテープで 貼った ように、見出しの 下に 帯を しく */
+.title::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  left: -8px;
+  right: -10px;
+  top: 34%;
+  bottom: 6%;
+  background: var(--sticker-mint);
+  opacity: .55;
+  transform: rotate(-2deg);
+  border-radius: 2px;
+}
+
 .topbar-actions { margin-left: auto; display: flex; align-items: center; gap: 10px; }
-.progress { font-size: 14px; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--muted); }
+.progress { font-family: var(--font-hand); font-size: 14px; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--ink-soft); }
 
 /* ------------------------------------------------------------ ボタン */
 
 .btn {
   font: inherit;
+  font-family: var(--font-hand);
   font-size: 15px;
   font-weight: 700;
-  color: var(--text);
-  background: var(--bg-2);
-  border: 1px solid var(--line);
+  color: var(--ink);
+  background: var(--paper-card);
+  border: 1.5px solid var(--rule-strong);
   border-radius: 12px;
   padding: 11px 16px;
   min-height: 44px;
   cursor: pointer;
   touch-action: manipulation;
-  transition: transform .08s ease, border-color .15s ease, background .15s ease;
+  box-shadow: 0 2px 0 var(--rule-strong);
+  transition: transform .08s ease, box-shadow .08s ease, background .15s ease;
 }
 
-.btn[disabled] { opacity: .45; cursor: default; }
-.btn:hover { border-color: var(--muted); }
-.btn:active { transform: translateY(1px); }
+.btn[disabled] { opacity: .45; cursor: default; box-shadow: none; }
+.btn:hover { background: var(--paper); }
+.btn:active { transform: translateY(2px); box-shadow: 0 0 0 var(--rule-strong); }
 .btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 
-.btn-primary { background: var(--accent); border-color: transparent; color: var(--accent-ink); }
-.btn-mini { font-size: 12px; padding: 5px 10px; min-height: 30px; border-radius: 9px; }
+.btn-primary {
+  background: var(--accent);
+  border-color: #c97e10;
+  color: var(--accent-ink);
+  box-shadow: 0 2px 0 #c97e10;
+}
+.btn-primary:hover { background: #f7b13f; }
+.btn-mini { font-size: 12px; padding: 5px 10px; min-height: 30px; border-radius: 9px; box-shadow: 0 1.5px 0 var(--rule-strong); }
 .btn-big { width: 100%; max-width: 420px; font-size: 19px; padding: 12px; min-height: 50px; }
 
 /* ------------------------------------------------------------ 画面 */
@@ -187,8 +207,8 @@ body {
   align-items: center;
   gap: 8px;
   padding: 10px 12px 12px;
-  background: var(--bg-2);
-  border-top: 1px solid var(--line);
+  background: var(--paper-card);
+  border-top: 2px dashed var(--rule-strong);
   transition: background .18s ease;
 }
 
@@ -202,7 +222,7 @@ body {
 
 .quiz-bottom.is-ok .answer-box,
 .quiz-bottom.is-ng .answer-box {
-  background: rgba(255, 255, 255, .18);
+  background: rgba(255, 255, 255, .2);
   border-color: currentColor;
   color: inherit;
 }
@@ -213,25 +233,29 @@ body {
 /* 色の ついた パネルの 上では、ボタンは 白ぬきに して 目立たせる */
 .quiz-bottom.is-ok .btn-primary,
 .quiz-bottom.is-ng .btn-primary {
-  background: var(--bg-2);
-  color: var(--text);
+  background: var(--paper-card);
+  color: var(--ink);
+  border-color: rgba(255, 255, 255, .7);
+  box-shadow: 0 2px 0 rgba(0, 0, 0, .18);
 }
 
-.lead { margin: 0; font-size: 16px; font-weight: 700; text-align: center; }
+.lead { margin: 0; font-family: var(--font-hand); font-size: 16px; font-weight: 700; text-align: center; }
 
 .panel {
   width: 100%;
-  background: var(--bg-2);
-  border: 1px solid var(--line);
+  background: var(--paper-card);
+  border: 1.5px solid var(--rule);
   border-radius: 16px;
   padding: 14px;
+  box-shadow: 0 3px 10px var(--shadow);
 }
 
 .panel-title {
   margin: 0 0 10px;
+  font-family: var(--font-hand);
   font-size: 13px;
   font-weight: 800;
-  color: var(--muted);
+  color: var(--ink-soft);
   letter-spacing: .08em;
   display: flex;
   align-items: center;
@@ -239,18 +263,20 @@ body {
 }
 .panel-title .btn-mini { margin-left: auto; }
 
-/* ------------------------------------------------------------ えらぶ */
+/* ------------------------------------------------------------ えらぶ (シール・ふせん 風) */
 
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .chips-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
 
 .chip {
+  position: relative;
   font: inherit;
+  font-family: var(--font-hand);
   font-size: 14px;
   font-weight: 700;
-  color: var(--text);
-  background: var(--bg-3);
-  border: 2px solid transparent;
+  color: var(--ink);
+  background: var(--paper-card);
+  border: 2px dashed var(--rule-strong);   /* シールの 切り取り線 */
   border-radius: 13px;
   padding: 10px 13px;
   min-height: 46px;
@@ -261,33 +287,83 @@ body {
   flex-direction: column;
   justify-content: center;
   gap: 2px;
+  transition: transform .08s ease, background .12s ease, border-color .12s ease;
 }
+.chip:hover { transform: translateY(-1px); }
 .chip:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
-.chip[aria-pressed="true"] { border-color: var(--accent); background: var(--bg-2); }
-.chip .chip-sub { font-size: 11px; font-weight: 600; color: var(--muted); }
-.chip[aria-pressed="true"] .chip-sub { color: var(--accent); }
+.chip .chip-sub { font-family: "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif; font-size: 11px; font-weight: 600; color: var(--ink-soft); }
+
+/* えらばれた チップ: シールを 貼った ように、わくを 実線に して 色を のせる。
+   右上の 三角は 「シールの 角を めくった」 見立て */
+.chip[aria-pressed="true"] {
+  border-style: solid;
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  box-shadow: 0 2px 6px var(--shadow);
+}
+.chip[aria-pressed="true"] .chip-sub { color: var(--ink); }
+.chip[aria-pressed="true"]::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 0 15px 15px 0;
+  border-color: transparent rgba(255, 255, 255, .9) transparent transparent;
+}
+
+/* ジャンルの チップは、シール帳 みたいに 1 つずつ 色を 変える */
+#topicPicker .chip:nth-child(1)[aria-pressed="true"],
+#topicPicker .chip:nth-child(5)[aria-pressed="true"] { border-color: var(--sticker-mint); background: var(--sticker-mint-soft); }
+#topicPicker .chip:nth-child(2)[aria-pressed="true"],
+#topicPicker .chip:nth-child(6)[aria-pressed="true"] { border-color: var(--sticker-sky); background: var(--sticker-sky-soft); }
+#topicPicker .chip:nth-child(3)[aria-pressed="true"],
+#topicPicker .chip:nth-child(7)[aria-pressed="true"] { border-color: var(--sticker-pink); background: var(--sticker-pink-soft); }
+#topicPicker .chip:nth-child(4)[aria-pressed="true"],
+#topicPicker .chip:nth-child(8)[aria-pressed="true"] { border-color: var(--sticker-lilac); background: var(--sticker-lilac-soft); }
+
+/* レベルの チップは、やさしい=緑・ふつう=オレンジ・むずかしい=赤 (むずかしさが 色でも わかる) */
+#levelPicker .chip:nth-child(1)[aria-pressed="true"] { border-color: var(--ok); background: var(--sticker-mint-soft); }
+#levelPicker .chip:nth-child(3)[aria-pressed="true"] { border-color: var(--ng); background: var(--ng-soft); }
 
 /* ------------------------------------------------------------ きろく */
 
 .stats { display: flex; flex-direction: column; gap: 8px; }
 .stat-row { display: flex; align-items: center; gap: 10px; font-size: 13px; }
 .stat-name { flex: none; width: 5.2em; font-weight: 700; }
-.stat-bar { flex: 1 1 auto; height: 10px; border-radius: 999px; background: var(--bg-3); overflow: hidden; }
+.stat-bar {
+  flex: 1 1 auto;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--paper-sunk);
+  box-shadow: inset 0 1px 2px var(--shadow);
+  overflow: hidden;
+}
 .stat-fill { height: 100%; background: var(--accent); border-radius: 999px; }
-.stat-num { flex: none; font-variant-numeric: tabular-nums; color: var(--muted); }
+.stat-num { flex: none; font-variant-numeric: tabular-nums; color: var(--ink-soft); }
 
 /* ------------------------------------------------------------ 出題 */
 
-.bar { width: 100%; height: 8px; border-radius: 999px; background: var(--bg-3); overflow: hidden; }
+.bar {
+  width: 100%;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--paper-sunk);
+  box-shadow: inset 0 1px 2px var(--shadow);
+  overflow: hidden;
+}
 .bar-fill { height: 100%; width: 0; background: var(--accent); border-radius: 999px; transition: width .2s ease; }
 
 .qhead { width: 100%; display: flex; gap: 8px; }
 .tag {
+  font-family: var(--font-hand);
   font-size: 12px; font-weight: 800; letter-spacing: .06em;
-  background: var(--bg-3); color: var(--text);
+  background: var(--accent-soft); color: var(--ink);
   border-radius: 999px; padding: 5px 12px;
 }
-.tag-quiet { background: transparent; color: var(--muted); border: 1px solid var(--line); }
+.tag-quiet { background: transparent; color: var(--ink-soft); border: 1px solid var(--rule); }
 
 .question {
   margin: 0;
@@ -304,8 +380,8 @@ body {
 /*
  * とちゅうの しきを かく らん。
  * 「かいた ものは 採点しない」ので、けす ボタンで いつでも やり直せる。
- * ノートの けい線は canvas の 背景 (CSS) で 出す。clearRect しても
- * 消えないので、けした あとも 「ここに 書く」場所だと わかる。
+ * ノートの けい線 (青い 横線 + 赤い 余白線) は canvas の 背景 (CSS) で 出す。
+ * clearRect しても 消えないので、けした あとも 「ここに 書く」場所だと わかる。
  */
 .scratch {
   width: 100%;
@@ -321,9 +397,10 @@ body {
 }
 
 .scratch-label {
+  font-family: var(--font-hand);
   font-size: 13px;
   font-weight: 700;
-  color: var(--muted);
+  color: var(--ink-soft);
 }
 .scratch-head .btn-mini { margin-left: auto; }
 
@@ -331,11 +408,13 @@ body {
   display: block;
   width: 100%;
   height: 130px;
-  border-radius: 12px;
-  border: 1px solid var(--line);
+  border-radius: 10px;
+  border: 1.5px solid var(--rule-strong);
   background:
-    repeating-linear-gradient(to bottom, transparent 0 27px, var(--line) 27px 28px),
-    var(--bg-2);
+    linear-gradient(to right, transparent 0 38px, var(--rule-margin) 38px 39.5px, transparent 39.5px 100%),
+    repeating-linear-gradient(to bottom, transparent 0 26px, var(--rule-blue) 26px 27.5px),
+    var(--paper-card);
+  box-shadow: inset 0 1px 4px var(--shadow);
   touch-action: none;    /* 指で 描いている あいだ、画面が スクロールしない ように */
   cursor: crosshair;
 }
@@ -367,14 +446,15 @@ body {
   justify-content: flex-end;
   gap: 2px;
   padding: 8px 16px;
-  background: var(--bg-2);
-  border: 2px solid var(--line);
+  background: var(--paper-card);
+  border: 2px solid var(--rule-strong);
   border-radius: 14px;
   font-size: 27px;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
   overflow-x: auto;
   white-space: nowrap;
+  box-shadow: inset 0 1px 3px var(--shadow);
 }
 /* 答え合わせの あとは 入力できないので、カーソルも 消す */
 .answer-box.is-ok .caret, .answer-box.is-ng .caret { display: none; }
@@ -382,44 +462,63 @@ body {
 .caret { width: 3px; height: 25px; background: var(--accent); border-radius: 2px; animation: blink 1.1s steps(1) infinite; }
 @keyframes blink { 50% { opacity: 0; } }
 
-.unit { flex: none; font-size: 18px; font-weight: 800; color: var(--muted); min-width: 2.6em; }
+.unit { flex: none; font-family: var(--font-hand); font-size: 18px; font-weight: 800; color: var(--ink-soft); min-width: 2.6em; }
 
-/* ------------------------------------------------------------ まる・ばつ */
+/* ------------------------------------------------------------ まる・ばつ (スタンプ 風) */
 
 .judge {
   width: 100%;
   margin: 0;
   padding: 4px 8px;
   border-radius: 12px;
+  font-family: var(--font-hand);
   font-size: 21px;
   font-weight: 800;
   text-align: center;
   line-height: 1.5;
 }
-/* せいかい・ざんねん の 色は パネルが 持つので、文字だけ 大きく 出す */
-.judge.is-ok, .judge.is-ng { color: inherit; }
+/* せいかい・ざんねん は、ハンコを 押した ように 点線わく + すこし かたむける */
+.judge.is-ok, .judge.is-ng {
+  width: auto;
+  color: inherit;
+  padding: 9px 26px;
+  border: 3px dashed rgba(255, 255, 255, .8);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, .1);
+  transform: rotate(-1.5deg);
+}
 /* 「おしい!」は やり直しの お知らせ。パネルの 色は 変えない */
 .judge.is-hint {
-  background: var(--bg-3);
-  color: var(--text);
+  background: var(--accent-soft);
+  color: var(--ink);
   font-size: 16px;
   padding: 9px 14px;
 }
 
 .solution {
   width: 100%;
-  background: var(--bg-2);
-  border: 1px solid var(--line);
+  background:
+    repeating-linear-gradient(to bottom, transparent 0 30px, var(--rule-blue) 30px 31.5px),
+    var(--paper-card);
+  border: 1.5px solid var(--rule);
   border-radius: 14px;
   padding: 14px;
   font-size: 15px;
   line-height: 1.95;
+  box-shadow: 0 2px 8px var(--shadow);
 }
-.solution h3 { margin: 0 0 6px; font-size: 12px; letter-spacing: .08em; color: var(--muted); }
+.solution h3 {
+  margin: 0 0 6px;
+  font-family: var(--font-hand);
+  font-size: 12px;
+  letter-spacing: .08em;
+  color: var(--ink-soft);
+}
+.solution h3::before { content: "✍️ "; }
 .solution ol { margin: 0; padding-left: 1.3em; }
 .solution li { margin: 2px 0; }
 
-/* ------------------------------------------------------------ テンキー */
+/* ------------------------------------------------------------ テンキー (けしごむ・ハンコ 風) */
 
 .keypad {
   width: 100%;
@@ -433,19 +532,20 @@ body {
   font: inherit;
   font-size: 21px;
   font-weight: 800;
-  color: var(--text);
-  background: var(--bg-2);
-  border: 1px solid var(--line);
-  border-radius: 13px;
+  color: var(--ink);
+  background: var(--paper-card);
+  border: 1.5px solid var(--rule-strong);
+  border-radius: 12px;
   min-height: 50px;
   cursor: pointer;
   touch-action: manipulation;
   font-variant-numeric: tabular-nums;
-  transition: transform .06s ease, background .12s ease;
+  box-shadow: 0 2px 0 var(--rule-strong);
+  transition: transform .06s ease, box-shadow .06s ease, background .12s ease;
 }
-.key:active { transform: translateY(1px); background: var(--bg-3); }
+.key:active { transform: translateY(2px); box-shadow: 0 0 0 var(--rule-strong); background: var(--paper-sunk); }
 .key:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
-.key-fn { font-size: 17px; background: var(--bg-3); }
+.key-fn { font-family: var(--font-hand); font-size: 17px; background: var(--paper-sunk); }
 
 .actions { width: 100%; display: flex; justify-content: center; }
 .actions-wrap { flex-wrap: wrap; gap: 10px; }
@@ -453,32 +553,35 @@ body {
 /* ------------------------------------------------------------ けっか */
 
 .face { margin: 0; font-size: 54px; line-height: 1; }
-.result { margin: 0; font-size: 40px; font-weight: 800; color: var(--accent); font-variant-numeric: tabular-nums; }
+.result { margin: 0; font-family: var(--font-hand); font-size: 40px; font-weight: 800; color: var(--accent-ink); font-variant-numeric: tabular-nums; }
 
 .wrong-list { width: 100%; display: flex; flex-direction: column; gap: 10px; }
 .wrong-item {
-  background: var(--bg-2);
-  border: 1px solid var(--line);
-  border-left: 4px solid var(--ng);
+  background:
+    repeating-linear-gradient(to bottom, transparent 0 28px, var(--rule-blue) 28px 29.5px),
+    var(--paper-card);
+  border: 1.5px solid var(--rule);
+  border-left: 5px solid var(--ng);
   border-radius: 12px;
   padding: 12px 14px;
   font-size: 15px;
   line-height: 1.8;
+  box-shadow: 0 2px 6px var(--shadow);
 }
-.wrong-item .wrong-answer { color: var(--muted); font-size: 14px; }
-.wrong-item .wrong-answer b { color: var(--text); font-size: 16px; }
+.wrong-item .wrong-answer { color: var(--ink-soft); font-size: 14px; }
+.wrong-item .wrong-answer b { color: var(--ink); font-size: 16px; }
 
 @media (prefers-reduced-motion: reduce) {
   * { transition-duration: .01ms !important; animation: none !important; }
 }
 
-/* 図。線は 図の色、文字は ふつうの 文字色。 */
+/* 図。線は 青ボールペンの 色、文字は ふつうの 文字色。 */
 .figure svg { color: var(--ink-figure); }
-.figure text { fill: var(--text); font-size: 13px; font-weight: 700; font-family: inherit; }
-.figure .shape { fill: currentColor; fill-opacity: .13; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; }
+.figure text { fill: var(--ink); font-size: 13px; font-weight: 700; font-family: inherit; }
+.figure .shape { fill: currentColor; fill-opacity: .14; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; }
 .figure .aux { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-dasharray: 5 4; }
 .figure .edge { fill: none; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; }
 
-.start-hint { margin: 0; font-size: 14px; font-weight: 700; color: var(--muted); }
+.start-hint { margin: 0; font-family: var(--font-hand); font-size: 14px; font-weight: 700; color: var(--ink-soft); }
 
-.answer-hint { margin: -4px 0 0; font-size: 13px; color: var(--muted); text-align: center; }
+.answer-hint { margin: -4px 0 0; font-size: 13px; color: var(--ink-soft); text-align: center; }

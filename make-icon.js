@@ -8,14 +8,16 @@ const fs = require('node:fs');
 const zlib = require('node:zlib');
 
 const SIZE = 180;
-const BG = [0x15, 0x1a, 0x2e];
-const YELLOW = [0xff, 0xd1, 0x66];
-const BLUE = [0x4c, 0xc9, 0xf0];
+const PAPER = [0xfa, 0xf3, 0xe4];    // クリーム色の 紙
+const BORDER = [0xc9, 0xa8, 0x6b];   // ふちどり (紙の わく線と 同じ 色)
+const INK = [0x3a, 0x2e, 0x1e];      // 万年筆の インク (÷ の 横ぼう)
+const ACCENT = [0xf5, 0xa6, 0x23];   // 蛍光ペン オレンジ (÷ の 上の点)
+const BLUE = [0x3b, 0x6e, 0xa8];     // 青ボールペン (÷ の 下の点)
 
-/** 角の まるい 四角の 中か */
-function inRounded(x, y, size, radius) {
-  const cx = Math.min(Math.max(x, radius), size - radius);
-  const cy = Math.min(Math.max(y, radius), size - radius);
+/** (left,top) から w×h の 角の まるい 四角の 中か */
+function inRoundedRect(x, y, left, top, w, h, radius) {
+  const cx = Math.min(Math.max(x, left + radius), left + w - radius);
+  const cy = Math.min(Math.max(y, top + radius), top + h - radius);
   const dx = x - cx, dy = y - cy;
   return dx * dx + dy * dy <= radius * radius;
 }
@@ -26,11 +28,13 @@ function inCircle(x, y, cx, cy, r) {
 }
 
 function pixel(x, y) {
-  if (!inRounded(x + 0.5, y + 0.5, SIZE, 39)) return null;          // 外は とうめい
-  if (inCircle(x, y, 90, 56, 12)) return YELLOW;                    // ÷ の 上の点
-  if (inCircle(x, y, 90, 124, 12)) return BLUE;                     // ÷ の 下の点
-  if (x >= 36 && x <= 144 && y >= 84 && y <= 96) return YELLOW;     // ÷ の 横ぼう
-  return BG;
+  const px = x + 0.5, py = y + 0.5;
+  if (!inRoundedRect(px, py, 0, 0, SIZE, SIZE, 39)) return null;              // 外は とうめい
+  if (!inRoundedRect(px, py, 3, 3, SIZE - 6, SIZE - 6, 37)) return BORDER;    // 紙の ふちどり
+  if (inCircle(x, y, 90, 53, 11)) return ACCENT;                              // ÷ の 上の点
+  if (inCircle(x, y, 90, 127, 11)) return BLUE;                              // ÷ の 下の点
+  if (x >= 40 && x <= 140 && y >= 84 && y <= 96) return INK;                 // ÷ の 横ぼう
+  return PAPER;
 }
 
 const raw = Buffer.alloc((SIZE * 4 + 1) * SIZE);

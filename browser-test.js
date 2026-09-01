@@ -409,8 +409,12 @@ async function run() {
     ok(hint.judged === null && hint.submitStillShown, 'やり直せる (まだ ばつに して いない)');
     ok(hint.panel === plainPanel, 'おしい! の ときは パネルの 色を 変えない');
 
-    // ------------------------------------------------ 明るい画面・暗い画面
-    section('明るい画面と 暗い画面');
+    // ------------------------------------------------ ライトテーマのみ
+    // このアプリは くらい 画面を 作らない (ノート・文房具の 紙の 色を 活かす ため)。
+    // 端末の 設定が 暗い ときも、Artifact など 見る人が data-theme を 立てる 場所でも、
+    // 常に 同じ 明るい 紙の色に なることを 見張る。
+    section('ライトテーマのみ');
+    let paperBg = null;
     for (const scheme of ['light', 'dark']) {
       const themed = await browser.newContext({ ...devices['iPhone 13'], colorScheme: scheme });
       const page = await themed.newPage();
@@ -423,23 +427,24 @@ async function run() {
         fg: getComputedStyle(document.body).color,
         figure: getComputedStyle(document.querySelector('#figure svg')).color
       }));
-      ok(colors.bg !== colors.fg, `${scheme}: 文字と 背景の 色が ちがう (${colors.bg} / ${colors.fg})`);
-      ok(colors.figure !== colors.bg, `${scheme}: 図の 線が 背景に 溶けない (${colors.figure})`);
+      ok(colors.bg !== colors.fg, `端末が ${scheme} でも 文字と 背景の 色が ちがう (${colors.bg} / ${colors.fg})`);
+      ok(colors.figure !== colors.bg, `端末が ${scheme} でも 図の 線が 背景に 溶けない (${colors.figure})`);
+      if (scheme === 'light') paperBg = colors.bg;
+      else ok(colors.bg === paperBg, `端末が dark でも 同じ 紙の色に なる (${colors.bg} = ${paperBg})`);
       await themed.close();
     }
 
-    // 見る人が 明るい/暗いを 自分で えらんだ とき (Artifact の 画面など)
-    const themed = await browser.newContext({ ...devices['iPhone 13'], colorScheme: 'dark' });
-    const themedPage = await themed.newPage();
-    await themedPage.goto(URL);
-    await themedPage.waitForFunction(() => window.__app);
-    const darkBg = await themedPage.evaluate(() => getComputedStyle(document.body).backgroundColor);
-    const pickedLight = await themedPage.evaluate(() => {
-      document.documentElement.dataset.theme = 'light';
+    // data-theme を 無理やり 立てても (Artifact の 画面など)、暗く ならない
+    const forced = await browser.newContext({ ...devices['iPhone 13'], colorScheme: 'dark' });
+    const forcedPage = await forced.newPage();
+    await forcedPage.goto(URL);
+    await forcedPage.waitForFunction(() => window.__app);
+    const forcedBg = await forcedPage.evaluate(() => {
+      document.documentElement.dataset.theme = 'dark';
       return getComputedStyle(document.body).backgroundColor;
     });
-    ok(darkBg !== pickedLight, `data-theme="light" を えらぶと 明るく なる (${darkBg} → ${pickedLight})`);
-    await themed.close();
+    ok(forcedBg === paperBg, `data-theme="dark" を 立てても 暗く ならない (${forcedBg})`);
+    await forced.close();
 
     // ------------------------------------------------ アイコン
     section('アイコン');
