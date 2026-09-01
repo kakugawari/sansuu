@@ -345,6 +345,8 @@
     qLevel: $('qLevel'),
     question: $('question'),
     figure: $('figure'),
+    scratchCanvas: $('scratchCanvas'),
+    btnScratchClear: $('btnScratchClear'),
     answerBox: $('answerBox'),
     answerText: $('answerText'),
     answerUnit: $('answerUnit'),
@@ -480,6 +482,70 @@
   }
 
   /* ---------------------------------------------------------------
+   * とちゅうの しきを かく らん (自由に かける メモ。採点には 使わない)
+   * ------------------------------------------------------------- */
+
+  const scratch = { drawing: false, last: null };
+
+  /**
+   * canvas の 実際の 画素数を、表示サイズ × 画面の 解像度に あわせる。
+   * サイズを 変えると 中身は 消えるので、けす ときと 同じ 処理で すむ。
+   */
+  function resizeScratch() {
+    const canvas = els.scratchCanvas;
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width < 1 || rect.height < 1) return;
+    const ratio = window.devicePixelRatio || 1;
+    canvas.width = Math.round(rect.width * ratio);
+    canvas.height = Math.round(rect.height * ratio);
+    const ctx = canvas.getContext('2d');
+    ctx.scale(ratio, ratio);
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.lineWidth = 2.6;
+    ctx.strokeStyle = getComputedStyle(document.body).color;
+  }
+
+  function clearScratch() { resizeScratch(); }
+
+  function scratchPoint(event) {
+    const rect = els.scratchCanvas.getBoundingClientRect();
+    return { x: event.clientX - rect.left, y: event.clientY - rect.top };
+  }
+
+  function scratchStart(event) {
+    scratch.drawing = true;
+    scratch.last = scratchPoint(event);
+    try { els.scratchCanvas.setPointerCapture(event.pointerId); } catch (e) { /* 無くても 描ける */ }
+    event.preventDefault();
+  }
+
+  function scratchMove(event) {
+    if (!scratch.drawing) return;
+    const point = scratchPoint(event);
+    const ctx = els.scratchCanvas.getContext('2d');
+    ctx.beginPath();
+    ctx.moveTo(scratch.last.x, scratch.last.y);
+    ctx.lineTo(point.x, point.y);
+    ctx.stroke();
+    scratch.last = point;
+    event.preventDefault();
+  }
+
+  function scratchEnd() { scratch.drawing = false; scratch.last = null; }
+
+  function buildScratch() {
+    const canvas = els.scratchCanvas;
+    canvas.addEventListener('pointerdown', scratchStart);
+    canvas.addEventListener('pointermove', scratchMove);
+    canvas.addEventListener('pointerup', scratchEnd);
+    canvas.addEventListener('pointercancel', scratchEnd);
+    canvas.addEventListener('pointerleave', scratchEnd);
+    els.btnScratchClear.addEventListener('click', clearScratch);
+    window.addEventListener('resize', () => { if (state.screen === 'quiz') resizeScratch(); });
+  }
+
+  /* ---------------------------------------------------------------
    * 画面の きりかえ
    * ------------------------------------------------------------- */
 
@@ -543,6 +609,7 @@
     els.quizBottom.classList.remove('is-ok', 'is-ng');
     els.solution.hidden = true;
     els.keypad.hidden = false;
+    clearScratch();
     els.btnSubmit.hidden = false;
     els.btnNext.hidden = true;
     els.quizTop.scrollTop = 0;
@@ -722,6 +789,7 @@
     state.stats = loadStats();
     buildHome();
     buildKeypad();
+    buildScratch();
     syncHome();
 
     els.btnStart.addEventListener('click', () => startQuiz(null));

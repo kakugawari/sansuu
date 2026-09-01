@@ -301,6 +301,45 @@ body {
 .figure { width: 100%; display: flex; justify-content: center; }
 .figure svg { max-width: 100%; height: auto; max-height: 170px; }
 
+/*
+ * とちゅうの しきを かく らん。
+ * 「かいた ものは 採点しない」ので、けす ボタンで いつでも やり直せる。
+ * ノートの けい線は canvas の 背景 (CSS) で 出す。clearRect しても
+ * 消えないので、けした あとも 「ここに 書く」場所だと わかる。
+ */
+.scratch {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.scratch-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.scratch-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+}
+.scratch-head .btn-mini { margin-left: auto; }
+
+.scratch-canvas {
+  display: block;
+  width: 100%;
+  height: 130px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background:
+    repeating-linear-gradient(to bottom, transparent 0 27px, var(--line) 27px 28px),
+    var(--bg-2);
+  touch-action: none;    /* 指で 描いている あいだ、画面が スクロールしない ように */
+  cursor: crosshair;
+}
+
 /* 分数は 縦に 積んで 書く */
 .frac {
   display: inline-flex;

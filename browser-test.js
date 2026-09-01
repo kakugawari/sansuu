@@ -296,6 +296,60 @@ async function run() {
     ok(figure && figure.texts >= 2, `図に 長さの 数字が ${figure && figure.texts} 個 入る`);
     ok((await overflow(phone)) <= 1, '図が 出ても 横スクロールが 出ない');
 
+    // ------------------------------------------------ とちゅうの しきを かく らん
+    section('とちゅうの しきを かく らん');
+    await phone.evaluate(() => window.__app.start(window.Core.makeQuiz({ topics: ['area'], level: 1, count: 2, seed: 9 })));
+    await phone.waitForTimeout(80);
+
+    function isBlank(pixels) {
+      for (let i = 3; i < pixels.length; i += 4) if (pixels[i] !== 0) return false;
+      return true;
+    }
+
+    const beforeDraw = await phone.evaluate(() => {
+      const c = document.getElementById('scratchCanvas');
+      const ctx = c.getContext('2d');
+      return Array.from(ctx.getImageData(0, 0, c.width, c.height).data);
+    });
+    ok(isBlank(beforeDraw), 'かく らんは 最初 なにも 書かれていない');
+
+    await phone.locator('#scratchCanvas').scrollIntoViewIfNeeded();
+    const box = await phone.locator('#scratchCanvas').boundingBox();
+    await phone.mouse.move(box.x + 10, box.y + 10);
+    await phone.mouse.down();
+    await phone.mouse.move(box.x + box.width - 10, box.y + box.height - 10, { steps: 8 });
+    await phone.mouse.up();
+    const afterDraw = await phone.evaluate(() => {
+      const c = document.getElementById('scratchCanvas');
+      const ctx = c.getContext('2d');
+      return Array.from(ctx.getImageData(0, 0, c.width, c.height).data);
+    });
+    ok(!isBlank(afterDraw), '指で なぞると 線が 書ける');
+
+    await phone.locator('#btnScratchClear').tap();
+    const afterClear = await phone.evaluate(() => {
+      const c = document.getElementById('scratchCanvas');
+      const ctx = c.getContext('2d');
+      return Array.from(ctx.getImageData(0, 0, c.width, c.height).data);
+    });
+    ok(isBlank(afterClear), '「けす」で まっさらに なる');
+
+    await phone.mouse.move(box.x + 10, box.y + 10);
+    await phone.mouse.down();
+    await phone.mouse.move(box.x + box.width - 10, box.y + box.height - 10, { steps: 8 });
+    await phone.mouse.up();
+    await tapCorrect(phone);                 // こたえてから つぎへ
+    await phone.locator('#btnNext').tap();
+    await phone.waitForTimeout(80);
+    const nextProblem = await phone.evaluate(() => {
+      const c = document.getElementById('scratchCanvas');
+      const ctx = c.getContext('2d');
+      return Array.from(ctx.getImageData(0, 0, c.width, c.height).data);
+    });
+    ok(isBlank(nextProblem), 'つぎの 問題に 進むと、書いた ものは 消える (前の 問題の 落書きが 残らない)');
+
+    ok((await overflow(phone)) <= 1, 'かく らんが 出ても 横スクロールが 出ない');
+
     // ------------------------------------------------ 食塩水の ビーカー
     section('食塩水の ビーカー');
     await phone.evaluate(() => window.__app.start(window.Core.makeQuiz({ topics: ['density'], level: 2, count: 1, seed: 3 })));
