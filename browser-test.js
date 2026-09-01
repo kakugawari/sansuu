@@ -135,6 +135,25 @@ async function run() {
     ok(fit.topics === 8, `ジャンルが 8 つ 出る (${fit.topics})`);
     ok(fit.keys === 15, `テンキーが 15 個 出る (${fit.keys})`);
 
+    // 最初は ジャンルを えらんでいない ので、まだ 始められない
+    const fresh = await phone.evaluate(() => ({
+      chosen: document.querySelectorAll('#topicPicker .chip[aria-pressed="true"]').length,
+      disabled: document.getElementById('btnStart').disabled,
+      hint: !document.getElementById('startHint').hidden
+    }));
+    ok(fresh.chosen === 0, `はじめは ジャンルが 1 つも えらばれて いない (${fresh.chosen} 個)`);
+    ok(fresh.disabled && fresh.hint, 'ジャンルを えらぶまで スタートは 押せない');
+
+    await phone.locator('#topicPicker .chip', { hasText: '面積' }).tap();
+    const afterPick = await phone.evaluate(() => ({
+      chosen: document.querySelectorAll('#topicPicker .chip[aria-pressed="true"]').length,
+      disabled: document.getElementById('btnStart').disabled
+    }));
+    ok(afterPick.chosen === 1 && !afterPick.disabled, '1 つ えらぶと スタートできる');
+    await phone.locator('#btnAllTopics').tap();
+    ok(await phone.evaluate(() => document.querySelectorAll('#topicPicker .chip[aria-pressed="true"]').length) === 8,
+      '「ぜんぶ」で 8 ジャンル えらべる');
+
     // 指で さわる ところが 小さすぎないか (44px は Apple の めやす)
     const small = await phone.evaluate(() => {
       const bad = [];
@@ -149,7 +168,7 @@ async function run() {
     // ------------------------------------------------ 1 問 とく
     section('問題を とく');
     await phone.locator('#countPicker .chip', { hasText: '5 問' }).tap();
-    await phone.locator('#btnStart').tap();
+    await phone.locator('#btnStart').tap();   // ジャンルは 上で 「ぜんぶ」を えらんである
     await phone.waitForSelector('#quizScreen:not([hidden])');
     ok(await phone.locator('#question').textContent() !== '', '問題文が 出る');
     // hidden にした 画面が ほんとうに 消えているか (display の 上書き事故よけ)
@@ -171,16 +190,22 @@ async function run() {
     ok(reach.bottom <= reach.view + 1 && reach.top > 0,
       `「こたえる」が スクロールなしで 押せる (下端 ${reach.bottom}px / 画面 ${reach.view}px)`);
 
+    const plainPanel = await phone.evaluate(() => getComputedStyle(document.getElementById('quizBottom')).backgroundColor);
     const first = await tapCorrect(phone);
     await phone.waitForTimeout(120);
     const afterCorrect = await phone.evaluate(() => ({
       judge: document.getElementById('judge').textContent,
+      panel: getComputedStyle(document.getElementById('quizBottom')).backgroundColor,
+      judgeBottom: Math.round(document.getElementById('judge').getBoundingClientRect().bottom),
+      answerTop: Math.round(document.getElementById('answerBox').getBoundingClientRect().top),
       solutionShown: !document.getElementById('solution').hidden,
       steps: document.querySelectorAll('#solution li').length,
       nextShown: !document.getElementById('btnNext').hidden,
       submitHidden: document.getElementById('btnSubmit').hidden
     }));
     ok(afterCorrect.judge.indexOf('せいかい') >= 0, `正しい答え (${first}) で せいかいに なる`);
+    ok(afterCorrect.judgeBottom <= afterCorrect.answerTop, '「せいかい!」は こたえ欄の 上に 出る');
+    ok(afterCorrect.panel !== plainPanel, `せいかいの ときは 下の パネルごと 色が 変わる (${plainPanel} → ${afterCorrect.panel})`);
     ok(afterCorrect.solutionShown && afterCorrect.steps > 0, `とき方が ${afterCorrect.steps} 行 出る`);
     ok(afterCorrect.nextShown && afterCorrect.submitHidden, '「つぎへ」に 変わる');
 
@@ -198,6 +223,7 @@ async function run() {
     await phone.waitForTimeout(120);
     const wrong = await phone.evaluate(() => ({
       judge: document.getElementById('judge').textContent,
+      panel: getComputedStyle(document.getElementById('quizBottom')).backgroundColor,
       answer: window.__app.current().answerLabel,
       klass: document.getElementById('answerBox').className
     }));
@@ -205,6 +231,8 @@ async function run() {
     ok(wrong.judge.replace(/\s/g, '').indexOf(wrong.answer.replace(/[{}\s]/g, '')) >= 0,
       `ばつの ときに 正しい答えが 出る (${wrong.judge.trim()})`);
     ok(wrong.klass.indexOf('is-ng') >= 0, 'こたえ欄の わくが 赤く なる');
+    ok(wrong.panel !== plainPanel && wrong.panel !== afterCorrect.panel,
+      `ばつの ときは 別の 色に なる (${wrong.panel})`);
 
     // ------------------------------------------------ 最後まで やる
     section('最後まで やる');
@@ -268,6 +296,33 @@ async function run() {
     ok(figure && figure.texts >= 2, `図に 長さの 数字が ${figure && figure.texts} 個 入る`);
     ok((await overflow(phone)) <= 1, '図が 出ても 横スクロールが 出ない');
 
+    // ------------------------------------------------ 食塩水の ビーカー
+    section('食塩水の ビーカー');
+    await phone.evaluate(() => window.__app.start(window.Core.makeQuiz({ topics: ['density'], level: 2, count: 1, seed: 3 })));
+    await phone.waitForTimeout(80);
+    const beaker = await phone.evaluate(() => {
+      const svg = document.querySelector('#figure svg');
+      if (!svg) return null;
+      const box = svg.getBoundingClientRect();
+      const stage = document.getElementById('quizTop').getBoundingClientRect();
+      // 属性ではなく「実際に 効いている 値」を 見る (class に 負けていないか)
+      const fills = Array.from(svg.querySelectorAll('polygon')).map((p) => Number(getComputedStyle(p).fillOpacity));
+      return {
+        texts: Array.from(svg.querySelectorAll('text')).map((t) => t.textContent),
+        fits: box.width <= stage.width + 1,
+        w: Math.round(box.width),
+        different: new Set(fills.filter((v) => v > 0).map((v) => v.toFixed(2))).size,
+        strongest: Math.max.apply(null, fills)
+      };
+    });
+    ok(beaker !== null, '食塩水の 問題で ビーカーの 図が 出る');
+    ok(beaker && beaker.texts.filter((t) => /%/.test(t)).length >= 2, `濃度が 図に 書いてある (${beaker && beaker.texts.join(' ')})`);
+    ok(beaker && beaker.texts.indexOf('?%') >= 0, '知りたい ところが ? に なっている');
+    ok(beaker && beaker.different >= 3, `濃さの ちがいが 塗りの こさで わかる (${beaker && beaker.different} 段階)`);
+    ok(beaker && beaker.strongest > 0.3, `濃い 食塩水は しっかり 濃く 塗られる (${beaker && beaker.strongest})`);
+    ok(beaker && beaker.fits, `ビーカーが 画面に おさまる (${beaker && beaker.w}px)`);
+    ok((await overflow(phone)) <= 1, 'ビーカーが 出ても 横スクロールが 出ない');
+
     // ------------------------------------------------ 分数
     section('分数');
     await phone.evaluate(() => window.__app.start(window.Core.makeQuiz({ topics: ['fraction'], level: 1, count: 2, seed: 11 })));
@@ -292,11 +347,13 @@ async function run() {
     await phone.waitForTimeout(80);
     const hint = await phone.evaluate(() => ({
       judge: document.getElementById('judge').textContent,
+      panel: getComputedStyle(document.getElementById('quizBottom')).backgroundColor,
       judged: window.__app.state().judged,
       submitStillShown: !document.getElementById('btnSubmit').hidden
     }));
     ok(hint.judge.indexOf('約分') >= 0, `約分していない 答え (${unreduced}) は 「おしい」に なる`);
     ok(hint.judged === null && hint.submitStillShown, 'やり直せる (まだ ばつに して いない)');
+    ok(hint.panel === plainPanel, 'おしい! の ときは パネルの 色を 変えない');
 
     // ------------------------------------------------ 明るい画面・暗い画面
     section('明るい画面と 暗い画面');

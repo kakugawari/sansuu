@@ -27,6 +27,17 @@
     return node;
   }
 
+  /**
+   * 塗りの こさ・文字の 大きさは style で 書く。
+   * SVG の 属性 (fill-opacity="..." など) は、CSS の class 指定に 必ず 負ける。
+   * .shape { fill-opacity: .13 } が 効いて しまい、濃さの ちがいが 出なかった。
+   */
+  function styleFor(node, part) {
+    if (part.fillOpacity != null) node.style.fillOpacity = part.fillOpacity;
+    if (part.size != null) node.style.fontSize = part.size + 'px';
+    return node;
+  }
+
   function clear(node) { while (node.firstChild) node.removeChild(node.firstChild); }
 
   function clamp(x, lo, hi) { return Math.min(hi, Math.max(lo, x)); }
@@ -88,10 +99,10 @@
 
     for (const part of plan.parts) {
       if (part.type === 'poly') {
-        g.appendChild(svgEl('polygon', {
+        g.appendChild(styleFor(svgEl('polygon', {
           class: part.klass || 'shape',
           points: part.points.map((p) => `${round1(p[0] * scale)},${round1(p[1] * scale)}`).join(' ')
-        }));
+        }), part));
       } else if (part.type === 'line') {
         g.appendChild(svgEl('line', {
           class: part.klass || 'aux',
@@ -99,18 +110,18 @@
           x2: round1(part.x2 * scale), y2: round1(part.y2 * scale)
         }));
       } else if (part.type === 'ellipse') {
-        g.appendChild(svgEl('ellipse', {
+        g.appendChild(styleFor(svgEl('ellipse', {
           class: part.klass || 'shape',
           cx: round1(part.cx * scale), cy: round1(part.cy * scale),
           rx: round1(part.rx * scale), ry: round1(part.ry * scale)
-        }));
+        }), part));
       } else if (part.type === 'text' && part.text) {
-        const t = svgEl('text', {
+        const t = styleFor(svgEl('text', {
           x: round1(part.x * scale + (part.dx || 0)),
           y: round1(part.y * scale + (part.dy || 0)),
           'text-anchor': part.anchor || 'middle',
           'dominant-baseline': part.baseline || 'middle'
-        });
+        }), part);
         t.textContent = part.text;
         g.appendChild(t);
       }
@@ -228,6 +239,62 @@
       };
     },
 
+    /*
+     * 食塩水の ビーカー。入れものを 横に ならべ、間に ＋ や → を 置く。
+     * 液面の 高さは 「いちばん 重い ものを 1」と した ときの 割合で 決め、
+     * 塗りの こさは 濃度で 決める。だから 「うすい 400g」と 「濃い 100g」の
+     * ちがいが、数字を 読む 前に 目で わかる。
+     */
+    beakers: function (f) {
+      const W = 3, H = 4, GAP = 1.7;
+      const items = f.items || [];
+      const ops = f.ops || [];
+      const amounts = items.map((it) => it.amount || 0).filter((a) => a > 0);
+      const maxAmount = amounts.length ? Math.max.apply(null, amounts) : 1;
+      const parts = [];
+
+      items.forEach(function (item, i) {
+        const x = i * (W + GAP);
+
+        if (item.type === 'salt') {
+          parts.push({ type: 'poly', klass: 'shape', fillOpacity: 0.45,
+            points: [[x + 0.5, H], [x + 1.5, H - 1.3], [x + 2.5, H]] });
+          parts.push({ type: 'line', klass: 'edge', x1: x + 0.2, y1: H, x2: x + 2.8, y2: H });
+          parts.push({ type: 'ellipse', klass: 'shape', fillOpacity: 0.8, cx: x + 1.5, cy: H - 0.55, rx: 0.09, ry: 0.09 });
+          parts.push({ type: 'ellipse', klass: 'shape', fillOpacity: 0.8, cx: x + 1.1, cy: H - 0.25, rx: 0.09, ry: 0.09 });
+          parts.push({ type: 'ellipse', klass: 'shape', fillOpacity: 0.8, cx: x + 1.9, cy: H - 0.3, rx: 0.09, ry: 0.09 });
+        } else {
+          const level = item.amount ? 0.3 + 0.55 * (item.amount / maxAmount) : 0.6;
+          const surface = H * (1 - level);
+          // 濃度 0〜30% を 塗りの こさ 0.15〜0.75 に わりあてる。
+          // 幅を 広く とらないと、暗い画面で ちがいが 見えない。
+          const strength = 0.15 + Math.min(item.percent == null ? 10 : item.percent, 30) / 30 * 0.6;
+          parts.push({ type: 'poly', klass: 'shape', fillOpacity: item.type === 'water' ? 0.07 : strength,
+            points: [[x, surface], [x + W, surface], [x + W, H], [x, H]] });
+          // ガラス。上は 開けておく (ふたを しない)
+          parts.push({ type: 'line', klass: 'edge', x1: x, y1: 0, x2: x, y2: H });
+          parts.push({ type: 'line', klass: 'edge', x1: x, y1: H, x2: x + W, y2: H });
+          parts.push({ type: 'line', klass: 'edge', x1: x + W, y1: 0, x2: x + W, y2: H });
+          // 目もり
+          [0.3, 0.5, 0.7].forEach(function (t) {
+            parts.push({ type: 'line', klass: 'edge', x1: x, y1: H * t, x2: x + 0.4, y2: H * t });
+          });
+        }
+
+        if (item.top) parts.push(label(x + W / 2, 0, item.top, 'middle', 0, -10));
+        if (item.bottom) parts.push(label(x + W / 2, H, item.bottom, 'middle', 0, 18));
+
+        const op = ops[i];
+        if (op && i < items.length - 1) {
+          const mark = label(x + W + GAP / 2, H * 0.55, op);
+          mark.size = 20;
+          parts.push(mark);
+        }
+      });
+
+      return { w: items.length * W + Math.max(0, items.length - 1) * GAP, h: H, parts: parts };
+    },
+
     prism: function (f) {
       const dz = depthOffset(f.len, f.base);
       const b = f.base, th = f.height;
@@ -258,6 +325,7 @@
   const els = {
     stage: $('stage'),
     quizTop: $('quizTop'),
+    quizBottom: $('quizBottom'),
     progress: $('progress'),
     btnQuit: $('btnQuit'),
     home: $('homeScreen'),
@@ -268,6 +336,7 @@
     countPicker: $('countPicker'),
     btnAllTopics: $('btnAllTopics'),
     btnStart: $('btnStart'),
+    startHint: $('startHint'),
     statsPanel: $('statsPanel'),
     statsList: $('statsList'),
     btnClearStats: $('btnClearStats'),
@@ -300,7 +369,7 @@
     screen: 'home',
     level: 1,
     count: 10,
-    topics: C.TOPICS.map((t) => t.id),   // えらんでいる ジャンル
+    topics: [],                          // えらんでいる ジャンル (最初は から)
     quiz: [],
     index: 0,
     input: '',
@@ -381,7 +450,6 @@
       const button = chip(topic.emoji + ' ' + topic.name, topic.desc, () => {
         const i = state.topics.indexOf(topic.id);
         if (i >= 0) state.topics.splice(i, 1); else state.topics.push(topic.id);
-        if (!state.topics.length) state.topics.push(topic.id);   // 全部 消させない
         syncHome();
       });
       button.dataset.topic = topic.id;
@@ -405,6 +473,9 @@
     els.countPicker.querySelectorAll('.chip').forEach((b) => {
       b.setAttribute('aria-pressed', String(Number(b.dataset.count) === state.count));
     });
+    // ジャンルを えらぶまでは 始められない
+    els.btnStart.disabled = state.topics.length === 0;
+    els.startHint.hidden = state.topics.length > 0;
     renderStats();
   }
 
@@ -432,6 +503,7 @@
    * ------------------------------------------------------------- */
 
   function startQuiz(problems) {
+    if (!problems && !state.topics.length) return;      // ジャンル未えらび
     state.quiz = problems || C.makeQuiz({
       topics: state.topics.slice(),
       level: state.level,
@@ -468,6 +540,7 @@
     els.answerHint.textContent = isFraction ? '分数は 3/4 のように 書きます' : '';
 
     els.judge.hidden = true;
+    els.quizBottom.classList.remove('is-ok', 'is-ng');
     els.solution.hidden = true;
     els.keypad.hidden = false;
     els.btnSubmit.hidden = false;
@@ -503,6 +576,9 @@
   function showJudge(kind, text) {
     els.judge.hidden = false;
     els.judge.className = 'judge is-' + kind;
+    // せいかい・ざんねん は 下の パネルごと 色を 変える (「おしい!」は 変えない)
+    els.quizBottom.classList.toggle('is-ok', kind === 'ok');
+    els.quizBottom.classList.toggle('is-ng', kind === 'ng');
     renderRich(els.judge, text);
   }
 
@@ -649,7 +725,10 @@
     syncHome();
 
     els.btnStart.addEventListener('click', () => startQuiz(null));
-    els.btnAllTopics.addEventListener('click', () => { state.topics = C.TOPICS.map((t) => t.id); syncHome(); });
+    els.btnAllTopics.addEventListener('click', () => {
+      state.topics = state.topics.length === C.TOPICS.length ? [] : C.TOPICS.map((t) => t.id);
+      syncHome();
+    });
     els.btnSubmit.addEventListener('click', submit);
     els.btnNext.addEventListener('click', next);
     els.btnQuit.addEventListener('click', goHome);

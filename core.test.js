@@ -143,13 +143,34 @@ test('分数の 書き方 {{a/b}} が こわれていない', () => {
 test('図の 数字は すべて 正の数', () => {
   eachProblem((p, topic, level, seed) => {
     if (!p.figure) return;
+    const where = `${topic} L${level} seed=${seed}`;
     for (const key of Object.keys(p.figure)) {
       const v = p.figure[key];
       if (typeof v === 'number') {
-        assert.ok(v > 0 && Number.isFinite(v), `図の ${key} が ${v} — ${topic} L${level} seed=${seed}`);
+        assert.ok(v > 0 && Number.isFinite(v), `図の ${key} が ${v} — ${where}`);
+      }
+    }
+    // ビーカーの 図は 中身も 見る
+    for (const item of p.figure.items || []) {
+      assert.ok(['liquid', 'water', 'salt'].includes(item.type), `知らない 入れもの: ${item.type} — ${where}`);
+      if (item.amount != null) assert.ok(item.amount > 0, `液の量が ${item.amount} — ${where}`);
+      if (item.percent != null) assert.ok(item.percent > 0 && item.percent <= 100, `濃度が ${item.percent} — ${where}`);
+      for (const text of [item.top, item.bottom]) {
+        assert.ok(typeof text === 'string' && text.length > 0 && !/undefined|NaN/.test(text),
+          `図の 文字が こわれている: ${text} — ${where}`);
       }
     }
   });
+});
+
+test('食塩水の 問題には ビーカーの 図が つく', () => {
+  let withFigure = 0, total = 0;
+  eachProblem((p, topic) => {
+    if (topic !== 'density') return;
+    total++;
+    if (p.figure && p.figure.kind === 'beakers' && p.figure.items.length >= 2) withFigure++;
+  });
+  assert.strictEqual(withFigure, total, `図の ない 食塩水の 問題が ${total - withFigure} 件 ある`);
 });
 
 test('単位ごとの 常識はずれを はじく', () => {

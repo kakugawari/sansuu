@@ -45,6 +45,7 @@
         <div id="countPicker" class="chips"></div>
       </section>
 
+      <p id="startHint" class="start-hint" hidden>ジャンルを 1 つ いじょう えらんでね</p>
       <button type="button" id="btnStart" class="btn btn-primary btn-big">スタート</button>
 
       <section class="panel" id="statsPanel" hidden>
@@ -73,7 +74,8 @@
       </div>
 
       <!-- 下: こたえ欄と テンキー。いつも 同じ場所に あって、動かない -->
-      <div class="quiz-bottom">
+      <div id="quizBottom" class="quiz-bottom">
+        <p id="judge" class="judge" role="status" aria-live="polite" hidden></p>
         <div class="answer-row">
           <div id="answerBox" class="answer-box" role="textbox" aria-label="こたえ" aria-readonly="true">
             <span id="answerText"></span><span class="caret" aria-hidden="true"></span>
@@ -81,7 +83,6 @@
           <span id="answerUnit" class="unit"></span>
         </div>
         <p id="answerHint" class="answer-hint" hidden></p>
-        <p id="judge" class="judge" role="status" aria-live="polite" hidden></p>
 
         <div id="keypad" class="keypad"></div>
 

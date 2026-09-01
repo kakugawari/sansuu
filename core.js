@@ -433,6 +433,16 @@
 
   const PERCENTS = [4, 5, 8, 10, 12, 15, 20, 25];
 
+  /* 食塩水の 図 (ビーカー) を 組み立てる ための 小道具。
+   * ここでは 「何を どう並べるか」だけを 決め、線を 引くのは app.js の 仕事。
+   * amount は 液面の 高さを 決める ためだけに 使う (文字に しない)。 */
+  function vessel(top, bottom, amount, percent) {
+    return { type: 'liquid', top: top, bottom: bottom, amount: amount, percent: percent };
+  }
+  function water(bottom, amount) { return { type: 'water', top: '水', bottom: bottom, amount: amount }; }
+  function salt(bottom) { return { type: 'salt', top: '食塩', bottom: bottom }; }
+  function beakers(items, ops) { return { kind: 'beakers', items: items, ops: ops }; }
+
   /** 濃度 p% で、食塩の量が整数になる食塩水の重さ */
   function cleanTotal(rng, p, minTotal, maxTotal) {
     const step = 100 / gcd(p, 100);
@@ -444,33 +454,47 @@
   function densityL1(rng) {
     const p = pick(rng, PERCENTS);
     const total = cleanTotal(rng, p, 50, 500);
-    const salt = total * p / 100;
-    const water = total - salt;
+    const saltGrams = total * p / 100;
+    const waterGrams = total - saltGrams;
 
     switch (pick(rng, ['toPercent', 'toSalt', 'toWater'])) {
       case 'toPercent':
         return {
-          question: `水 ${water}g に 食塩 ${salt}g を とかしました。この 食塩水の 濃度は 何 % ですか。`,
+          question: `水 ${waterGrams}g に 食塩 ${saltGrams}g を とかしました。この 食塩水の 濃度は 何 % ですか。`,
+          figure: beakers([
+            water(waterGrams + 'g', waterGrams),
+            salt(saltGrams + 'g'),
+            vessel('?%', total + 'g', total, p)
+          ], ['＋', '→']),
           answer: numAns(p), unit: '%',
           steps: [
             '濃度 = 食塩 ÷ 食塩水全体 × 100',
-            `食塩水全体 = ${water} + ${salt} = ${total}`,
-            `${salt} ÷ ${total} × 100 = ${p}`
+            `食塩水全体 = ${waterGrams} + ${saltGrams} = ${total}`,
+            `${saltGrams} ÷ ${total} × 100 = ${p}`
           ]
         };
       case 'toSalt':
         return {
           question: `濃度 ${p}% の 食塩水が ${total}g あります。とけている 食塩は 何 g ですか。`,
-          answer: numAns(salt), unit: 'g',
-          steps: ['食塩 = 食塩水全体 × 濃度 ÷ 100', `${total} × ${p} ÷ 100 = ${salt}`]
+          figure: beakers([
+            vessel(p + '%', total + 'g', total, p),
+            salt('?g')
+          ], ['→']),
+          answer: numAns(saltGrams), unit: 'g',
+          steps: ['食塩 = 食塩水全体 × 濃度 ÷ 100', `${total} × ${p} ÷ 100 = ${saltGrams}`]
         };
       default:
         return {
           question: `濃度 ${p}% の 食塩水を ${total}g つくります。水は 何 g 必要ですか。`,
-          answer: numAns(water), unit: 'g',
+          figure: beakers([
+            water('?g', waterGrams),
+            salt('?g'),
+            vessel(p + '%', total + 'g', total, p)
+          ], ['＋', '→']),
+          answer: numAns(waterGrams), unit: 'g',
           steps: [
-            `食塩 = ${total} × ${p} ÷ 100 = ${salt}`,
-            `水 = 全体 − 食塩 = ${total} − ${salt} = ${water}`
+            `食塩 = ${total} × ${p} ÷ 100 = ${saltGrams}`,
+            `水 = 全体 − 食塩 = ${total} − ${saltGrams} = ${waterGrams}`
           ]
         };
     }
@@ -482,31 +506,41 @@
   function densityL2(rng) {
     const pair = pick(rng, PERCENT_PAIRS);
     const hi = pair[0], lo = pair[1];
-    const salt = lcm(hi, lo) * randInt(rng, 1, 2);
-    const heavy = salt * 100 / hi;   // 濃い方の重さ
-    const light = salt * 100 / lo;   // うすい方の重さ
-    const water = light - heavy;
+    const saltGrams = lcm(hi, lo) * randInt(rng, 1, 2);
+    const heavy = saltGrams * 100 / hi;   // 濃い方の重さ
+    const light = saltGrams * 100 / lo;   // うすい方の重さ
+    const waterGrams = light - heavy;
 
     if (rng() < 0.5) {
       return {
-        question: `濃度 ${hi}% の 食塩水 ${heavy}g に、水を ${water}g 加えました。濃度は 何 % に なりますか。`,
+        question: `濃度 ${hi}% の 食塩水 ${heavy}g に、水を ${waterGrams}g 加えました。濃度は 何 % に なりますか。`,
+        figure: beakers([
+          vessel(hi + '%', heavy + 'g', heavy, hi),
+          water(waterGrams + 'g', waterGrams),
+          vessel('?%', light + 'g', light, lo)
+        ], ['＋', '→']),
         answer: numAns(lo), unit: '%',
         steps: [
           '水を加えても、食塩の量は 変わらない',
-          `食塩 = ${heavy} × ${hi} ÷ 100 = ${salt}`,
-          `全体 = ${heavy} + ${water} = ${light}`,
-          `${salt} ÷ ${light} × 100 = ${lo}`
+          `食塩 = ${heavy} × ${hi} ÷ 100 = ${saltGrams}`,
+          `全体 = ${heavy} + ${waterGrams} = ${light}`,
+          `${saltGrams} ÷ ${light} × 100 = ${lo}`
         ]
       };
     }
     return {
-      question: `濃度 ${lo}% の 食塩水 ${light}g を 熱して、水を ${water}g 蒸発させました。濃度は 何 % に なりますか。`,
+      question: `濃度 ${lo}% の 食塩水 ${light}g を 熱して、水を ${waterGrams}g 蒸発させました。濃度は 何 % に なりますか。`,
+      figure: beakers([
+        vessel(lo + '%', light + 'g', light, lo),
+        water(waterGrams + 'g', waterGrams),
+        vessel('?%', heavy + 'g', heavy, hi)
+      ], ['−', '→']),
       answer: numAns(hi), unit: '%',
       steps: [
         '水が 蒸発しても、食塩の量は 変わらない',
-        `食塩 = ${light} × ${lo} ÷ 100 = ${salt}`,
-        `全体 = ${light} − ${water} = ${heavy}`,
-        `${salt} ÷ ${heavy} × 100 = ${hi}`
+        `食塩 = ${light} × ${lo} ÷ 100 = ${saltGrams}`,
+        `全体 = ${light} − ${waterGrams} = ${heavy}`,
+        `${saltGrams} ÷ ${heavy} × 100 = ${hi}`
       ]
     };
   }
@@ -531,6 +565,11 @@
         const s1 = A * p1 / 100, s2 = B * p2 / 100;
         return {
           question: `濃度 ${p1}% の 食塩水 ${A}g と、濃度 ${p2}% の 食塩水 ${B}g を まぜました。濃度は 何 % に なりますか。`,
+          figure: beakers([
+            vessel(p1 + '%', A + 'g', A, p1),
+            vessel(p2 + '%', B + 'g', B, p2),
+            vessel('?%', (A + B) + 'g', A + B, p3)
+          ], ['＋', '→']),
           answer: numAns(p3), unit: '%',
           steps: [
             'それぞれの 食塩の量を たして、全体の重さで わる',
@@ -543,15 +582,20 @@
       case 'addWaterAmount': {
         const pair = pick(rng, PERCENT_PAIRS);
         const hi = pair[0], lo = pair[1];
-        const salt = lcm(hi, lo) * randInt(rng, 1, 2);
-        const heavy = salt * 100 / hi;
-        const light = salt * 100 / lo;
+        const saltGrams = lcm(hi, lo) * randInt(rng, 1, 2);
+        const heavy = saltGrams * 100 / hi;
+        const light = saltGrams * 100 / lo;
         return {
           question: `濃度 ${hi}% の 食塩水 ${heavy}g を、濃度 ${lo}% に するには 水を 何 g 加えれば よいですか。`,
+          figure: beakers([
+            vessel(hi + '%', heavy + 'g', heavy, hi),
+            water('?g', light - heavy),
+            vessel(lo + '%', '?g', light, lo)
+          ], ['＋', '→']),
           answer: numAns(light - heavy), unit: 'g',
           steps: [
-            `食塩 = ${heavy} × ${hi} ÷ 100 = ${salt}`,
-            `${lo}% に する とき、全体は ${salt} ÷ ${lo} × 100 = ${light}`,
+            `食塩 = ${heavy} × ${hi} ÷ 100 = ${saltGrams}`,
+            `${lo}% に する とき、全体は ${saltGrams} ÷ ${lo} × 100 = ${light}`,
             `加える水 = ${light} − ${heavy} = ${light - heavy}`
           ]
         };
@@ -568,16 +612,21 @@
         const step = lcm((100 - p2) / g, 100 / gcd(p1, 100));
         const kMax = Math.max(1, Math.floor(600 / step));
         const total = step * randInt(rng, 1, kMax);
-        const salt = total * p1 / 100;
+        const saltGrams = total * p1 / 100;
         const add = total * (p2 - p1) / (100 - p2);
         return {
           question: `濃度 ${p1}% の 食塩水 ${total}g に 食塩を 加えて、濃度 ${p2}% に します。食塩を 何 g 加えれば よいですか。`,
+          figure: beakers([
+            vessel(p1 + '%', total + 'g', total, p1),
+            salt('?g'),
+            vessel(p2 + '%', '?g', total + add, p2)
+          ], ['＋', '→']),
           answer: numAns(add), unit: 'g',
           steps: [
-            `いまの食塩 = ${total} × ${p1} ÷ 100 = ${fmt(salt)}`,
-            `食塩を x g 加えると (${fmt(salt)} + x) ÷ (${total} + x) = ${p2} ÷ 100`,
+            `いまの食塩 = ${total} × ${p1} ÷ 100 = ${fmt(saltGrams)}`,
+            `食塩を x g 加えると (${fmt(saltGrams)} + x) ÷ (${total} + x) = ${p2} ÷ 100`,
             `x = ${fmt(add)}`,
-            `たしかめ: (${fmt(salt)} + ${fmt(add)}) ÷ ${fmt(total + add)} × 100 = ${p2}`
+            `たしかめ: (${fmt(saltGrams)} + ${fmt(add)}) ÷ ${fmt(total + add)} × 100 = ${p2}`
           ]
         };
       }
